@@ -182,23 +182,27 @@ class MCWorldModelInfer:
     ):
 
         
+        import time
         noise = torch.randn(
             (1, 1, 256, 32), 
             device=self.model.device,
             dtype=torch.bfloat16,
             generator=self.random_generator,
         )
+        _t0 = time.perf_counter()
         token = generate_one_frame(
             model=self.model,
             x=noise,
             frame_idx=self.frame_idx,
-            steps_size=4,
+            steps_size=self.steps_size,
             action_ids=action_id,
             device=self.model.device,
             K_samples_max=self.model.K_samples_step,
             model_runner=self.model_runner if self.use_cuda_graph else None,
-            refresh_kvcache=self.refresh_kvcache
+            refresh_kvcache=False,
         )
+        torch.cuda.synchronize()
+        _t1 = time.perf_counter()
         frame = decode_one_frame(
             model=self.tokenizer,
             tokens=token.clone(),
@@ -206,6 +210,9 @@ class MCWorldModelInfer:
             frame_idx=self.frame_idx,
             device=self.model.device,
         )
+        torch.cuda.synchronize()
+        _t2 = time.perf_counter()
+        print(f"[TIMING] generate={(_t1-_t0)*1000:.1f}ms decode={(_t2-_t1)*1000:.1f}ms total={(_t2-_t0)*1000:.1f}ms steps={self.steps_size} ", flush=True)
         self.frame_idx +=1
         
         if self.enable_record_video:
