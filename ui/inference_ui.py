@@ -40,6 +40,14 @@ class ServerConfig:
     resize_width: int = 640
     resize_height: int = 360
 
+    # Mouse OOD-spike guards (live-input decoherence fix).
+    # Per-frame |dx|, |dy| are clipped to mouse_clip before being passed
+    # to the action tokenizer; then optionally low-pass filtered with a
+    # one-pole IIR (filtered = alpha*new + (1-alpha)*prev). Set
+    # mouse_ema_alpha=0.0 to disable smoothing, 1.0 for passthrough.
+    mouse_clip: float = 25.0
+    mouse_ema_alpha: float = 0.5
+
 # 初始化全局配置
 config = ServerConfig()
 
@@ -154,6 +162,9 @@ class InferenceEngine:
         self.tokenizer = MineCraftActionTokenizer()
         self.tokenizer.camera_scaler = config.camera_scaler
         self.lock = threading.Lock()
+        # Mouse low-pass filter state; reset on V-key / scene refresh.
+        self._mouse_ema_dx = 0.0
+        self._mouse_ema_dy = 0.0
 
     def load_model(self):
         # 这里的 config.dynamic_model_path 已经被 argparse 或 env 更新
@@ -178,10 +189,37 @@ class InferenceEngine:
         if self.model:
             with self.lock:
                 self.model.clean_kvcache()
+        # Stale mouse filter state would corrupt the first frame after
+        # a scene reset; clear it together with the KV cache.
+        self._mouse_ema_dx = 0.0
+        self._mouse_ema_dy = 0.0
 
     def render(self, state: InputState, dx: float, dy: float) -> bytes:
         if not self.model: return b''
-        
+
+        # ---- Mouse OOD-spike guard ----
+        # 1) hard-clip the per-frame magnitude so chaotic input cannot push
+        #    the action tensor into bins the model never saw in training.
+        clip = float(self.config.mouse_clip)
+        if clip > 0:
+            if dx > clip: dx = clip
+            elif dx < -clip: dx = -clip
+            if dy > clip: dy = clip
+            elif dy < -clip: dy = -clip
+        # 2) optional one-pole IIR low-pass on top, to soften the remaining
+        #    frame-to-frame jumps that drive autoregressive amplification.
+        alpha = float(self.config.mouse_ema_alpha)
+        if 0.0 < alpha < 1.0:
+            self._mouse_ema_dx = alpha * dx + (1.0 - alpha) * self._mouse_ema_dx
+            self._mouse_ema_dy = alpha * dy + (1.0 - alpha) * self._mouse_ema_dy
+            dx = self._mouse_ema_dx
+            dy = self._mouse_ema_dy
+        else:
+            # Keep the filter state in sync even when disabled, so toggling
+            # alpha at runtime does not introduce a step.
+            self._mouse_ema_dx = dx
+            self._mouse_ema_dy = dy
+
         pressed_keys = [KEYWORD_BUTTON_MAPPING[k] for k in state.keys_down if k in KEYWORD_BUTTON_MAPPING]
         pressed_mouse_btns = [mouse_button_mapping[int(k)] for k in state.mouse_buttons]
         
@@ -487,6 +525,8 @@ if __name__ == "__main__":
     parser.add_argument("--host", type=str, default="0.0.0.0", help="Host address")
     parser.add_argument("--port", type=int, default=8000, help="Port number")
     parser.add_argument("--steps_size", type=int, default=None, help="Override flow-matching denoise steps; valid powers of 2 only (1,2,4,8,...)")
+    parser.add_argument("--mouse_clip", type=float, default=None, help="Per-frame |dx|,|dy| cap before action quantization (default 25.0; 0 disables)")
+    parser.add_argument("--mouse_ema_alpha", type=float, default=None, help="One-pole IIR low-pass on per-frame mouse delta; 0.0 disables, 1.0 passthrough (default 0.5)")
     
     args = parser.parse_args()
     if args.steps_size is not None and (
@@ -504,6 +544,15 @@ if __name__ == "__main__":
         config.record_video_output_path = args.record_video_output_path
     if args.steps_size is not None:
         config.steps_size = args.steps_size
+    if args.mouse_clip is not None:
+        if args.mouse_clip < 0:
+            parser.error("--mouse_clip must be >= 0")
+        config.mouse_clip = args.mouse_clip
+    if args.mouse_ema_alpha is not None:
+        if not (0.0 <= args.mouse_ema_alpha <= 1.0):
+            parser.error("--mouse_ema_alpha must be in [0.0, 1.0]")
+        config.mouse_ema_alpha = args.mouse_ema_alpha
+    print(f"Mouse guard: clip=±{config.mouse_clip}/frame, ema_alpha={config.mouse_ema_alpha}")
         
     print(f"Starting server on {args.host}:{args.port}")
     
