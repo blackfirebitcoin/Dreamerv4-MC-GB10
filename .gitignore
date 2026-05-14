@@ -39,3 +39,5 @@ checkpoint/*
 dreamer4_mc.egg-info/
 __pycache__/
 tools/*.bak
+
+.captures/

@@ -7,8 +7,9 @@ Two-phase design (added 2026-05-14):
   coherent recent context. This pulls the model out of the cold-start
   fixed-point basin (e.g. all-black absorbing state) before the recording
   phase commits to a high-step trajectory.
-- RECORD phase: generate the bucket-place action sequence at the user-
-  selected steps_size against the now-warm cache; this is the output mp4.
+- RECORD phase: generate the neutral walk-forward+sway action sequence at
+  the user-selected steps_size against the now-warm/replayed cache; this is
+  the output mp4.
 
 If --warmup-frames=0, behaves identically to the old single-phase renderer.
 

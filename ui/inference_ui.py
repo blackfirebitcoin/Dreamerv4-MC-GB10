@@ -5,6 +5,7 @@ import io
 import threading
 import os
 import argparse
+from pathlib import Path
 import sys
 from dataclasses import dataclass, field
 from contextlib import asynccontextmanager
@@ -242,12 +243,17 @@ class InferenceEngine:
         # a scene reset; clear it together with the KV cache.
         self._mouse_ema_dx = 0.0
         self._mouse_ema_dy = 0.0
-        # V-key starts a fresh capture take.
-        if self._capture_dir is not None and not self._capture_done:
-            if self._captured_frames:
+        # V-key starts a fresh capture take. If a previous capture already
+        # completed, this re-arms capture so multiple takes can be recorded
+        # in one browser session.
+        if self._capture_dir is not None:
+            if self._captured_frames and not self._capture_done:
                 print(f"[capture] V-key reset; discarding partial buffer ({len(self._captured_frames)} frames)")
+            elif self._capture_done:
+                print("[capture] V-key reset; starting a fresh capture take")
             self._captured_frames = []
             self._captured_actions = []
+            self._capture_done = False
 
     def render(self, state: InputState, dx: float, dy: float) -> bytes:
         if not self.model: return b''
@@ -423,7 +429,6 @@ async def lifespan(app: FastAPI):
     engine.load_model()
     yield
 from fastapi.staticfiles import StaticFiles
-from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent
 static_dir_path = BASE_DIR / "static"
 app = FastAPI(lifespan=lifespan)

@@ -50,7 +50,7 @@ def prefilling(
     Encode video into tokens using the provided tokenizer.
 
     Args:
-        video (torch.Tensor): Input video tensor of shape (F, C, H, W).
+        video (torch.Tensor): Input video tensor of shape (B, F, C, H, W).
         tokenizer: Tokenizer model with an encode method.
         batch_size (int): Batch size for processing.
 
@@ -73,7 +73,7 @@ def prefilling(
             device=dynamic_model.device,
             frame_idx=i,
             model_runner=dynamic_runner,
-            action_ids=action_ids,
+            action_ids=action_ids[i:i+1],
         )
 
         
@@ -82,7 +82,7 @@ def prefilling(
     for i in range(frame_num):
         decode_one_frame(
             model = tokenizer,
-            tokens = token[i:i+1],
+            tokens = token[:, i:i+1],
             shape=(1, 1, 3, 384 // 16, 640 // 16),
             frame_idx=i,
             device=tokenizer.device,
