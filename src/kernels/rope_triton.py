@@ -15,9 +15,12 @@ def _rope_apply_fused_kernel_triton(x_ptr, freq_ptr, out_ptr, S, BLOCK_M: tl.con
     offs_m = tl.arange(0, BLOCK_M) + idx_s * BLOCK_M
     offs_n_x = tl.arange(0, C)
     x = tl.load(x_ptr + offs_m[:, None] * H * C + offs_n_x[None, :], mask=offs_m[:, None] < S, other=0.0)
-    x = x.reshape(BLOCK_M, C // 2, 2).to(tl.float64)
+    # FP32 math: GB10 FP64 throughput is ~1/64 of FP32; keep freq stored as
+    # FP64 to avoid touching callers, but cast to FP32 before the multiply.
+    x = x.reshape(BLOCK_M, C // 2, 2).to(tl.float32)
     x0, x1 = tl.split(x)
     freq = tl.load(freq_ptr + offs_m[:, None] * C + offs_n_x[None, :], mask=offs_m[:, None] < S, other=0.0)
+    freq = freq.to(tl.float32)
     freq = freq.reshape(BLOCK_M, C // 2, 2)
     f0, f1 = tl.split(freq)
     if is_fwd:
