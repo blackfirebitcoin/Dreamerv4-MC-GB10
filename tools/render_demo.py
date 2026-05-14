@@ -120,6 +120,10 @@ def main() -> int:
                     help="steps_size used during the warmup phase (default: 4 = live baseline)")
     ap.add_argument("--capture-replay", default=None,
                     help="If set, ignore --start-frame and --warmup-frames; prefill from a live-capture .pt file (frames + actions) and run record phase against that context.")
+    ap.add_argument("--capture-prefill-frames", type=int, default=0,
+                    help="With --capture-replay: how many leading captured frames to use as prefill. 0 = use all frames as prefill + synthetic record actions (legacy behavior). >0 = split: first N frames -> prefill, next --n-frames captured action_ids -> record actions (Move 3 captured-action continuation).")
+    ap.add_argument("--capture-record-synthetic", action="store_true",
+                    help="With --capture-prefill-frames>0: force synthetic walk-forward+sway record actions even though captured actions would be available. Useful for ablating the seam hypothesis.")
     ap.add_argument("--output", default="/workspace/dreamerv4-mc/.demos/bucket-water-latest.mp4")
     ap.add_argument("--dynamic-path", default="checkpoints/dynamic")
     ap.add_argument("--tokenizer-path", default="checkpoints/tokenizer")
@@ -161,6 +165,7 @@ def main() -> int:
     action_tok.camera_scaler = 360.0 / 2400.0 * 2
 
     # ---- PREFILL PATH SELECTION ----
+    captured_record_actions = None
     if args.capture_replay:
         # Multi-frame prefill from a real human-played trajectory.
         # Bypasses both single-image prefill and synthetic warmup.
@@ -170,11 +175,58 @@ def main() -> int:
         cap_frames = payload["frames"]            # (N, 3, H, W) fp16 in [-1, 1]
         cap_actions = payload["action_ids"]       # (N, 12) long
         n_cap = cap_frames.shape[0]
-        print(f"[demo] CAPTURE-REPLAY: {n_cap} frames, action_ids shape={tuple(cap_actions.shape)}",
+        print(f"[demo] CAPTURE-REPLAY: {n_cap} captured frames, action_ids shape={tuple(cap_actions.shape)}",
               flush=True)
+
+        # SPLIT POLICY:
+        #   --capture-prefill-frames 0 (default): use ALL captured frames as
+        #       prefill, synthetic walking actions during record. (legacy)
+        #   --capture-prefill-frames N (Move 3): use first N captured frames
+        #       as prefill, next --n-frames captured action_ids as record
+        #       actions. Eliminates the synthetic-vs-real action distribution
+        #       seam that destabilized high-step offline renders.
+        prefill_n = args.capture_prefill_frames if args.capture_prefill_frames > 0 else n_cap
+        if prefill_n > n_cap:
+            raise SystemExit(
+                f"[demo] ERROR: --capture-prefill-frames={prefill_n} exceeds capture length {n_cap}."
+            )
+        if args.capture_prefill_frames > 0:
+            need = prefill_n + args.n_frames
+            if n_cap < need:
+                raise SystemExit(
+                    f"[demo] ERROR: capture has {n_cap} frames; need >= {need} "
+                    f"(prefill {prefill_n} + record {args.n_frames}). "
+                    f"Re-capture with: ~/dreamerv4-restart-capture.sh 4 {need}"
+                )
+            cap_frames_use = cap_frames[:prefill_n]
+            cap_actions_use = cap_actions[:prefill_n]
+            if not args.capture_record_synthetic:
+                captured_record_actions = (
+                    cap_actions[prefill_n:prefill_n + args.n_frames].to(device)
+                )
+                print(
+                    f"[demo] CAPTURE-REPLAY split: prefill={prefill_n}f, "
+                    f"record_actions=captured[{prefill_n}:{prefill_n + args.n_frames}] "
+                    f"(Move 3: captured-action continuation)",
+                    flush=True,
+                )
+            else:
+                print(
+                    f"[demo] CAPTURE-REPLAY split: prefill={prefill_n}f, "
+                    f"record_actions=SYNTHETIC (--capture-record-synthetic ablation)",
+                    flush=True,
+                )
+        else:
+            cap_frames_use = cap_frames
+            cap_actions_use = cap_actions
+            print(
+                f"[demo] CAPTURE-REPLAY: legacy mode, using all {n_cap} frames as prefill",
+                flush=True,
+            )
+
         # Reshape to (1, N, 3, H, W) and push to device/dtype.
-        cap_frames_dev = cap_frames.unsqueeze(0).to(device).to(dtype)
-        cap_actions_dev = cap_actions.to(device)
+        cap_frames_dev = cap_frames_use.unsqueeze(0).to(device).to(dtype)
+        cap_actions_dev = cap_actions_use.to(device)
         # Direct prefill - no generation in this phase.
         t_pf = time.perf_counter()
         model.prefilling_kvcache(init_frames=cap_frames_dev, action_ids=cap_actions_dev)
@@ -205,7 +257,11 @@ def main() -> int:
         record_init_frames = init_frames
 
     # ---- RECORD PHASE ----
-    record_actions = build_action_sequence(action_tok, args.n_frames).to(device)
+    if captured_record_actions is not None:
+        record_actions = captured_record_actions
+        print(f"[demo] RECORD using {record_actions.shape[0]} captured action_ids", flush=True)
+    else:
+        record_actions = build_action_sequence(action_tok, args.n_frames).to(device)
     per_frame_ms = args.steps_size * 75 + 50
     eta_min = args.n_frames * per_frame_ms / 60000
     print(f"[demo] RECORD: {args.n_frames}f at steps={args.steps_size} "
