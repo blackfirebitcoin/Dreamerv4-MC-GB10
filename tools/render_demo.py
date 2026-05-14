@@ -36,60 +36,25 @@ from src.modules.actokenizer import MineCraftActionTokenizer
 
 
 def build_action_sequence(action_tok: MineCraftActionTokenizer, n_frames: int) -> torch.Tensor:
-    """Smooth "walk up, briefly look down to place item, walk on" timeline.
+    """Walk forward with a gentle yaw sway (RECORD phase).
 
-    Designed around two failure modes observed in earlier renders:
-    1. Cold steps_size=32 collapses to all-black absorbing state.
-       Mitigated by the WARMUP phase (a different concern, separate code).
-    2. Even with a warm cache, removing all "I'm moving" signals lets the
-       model fall into a different absorbing state: "predict previous frame
-       forever" (frame-delta drops to ~0 in the last 1-2 seconds). Mitigated
-       here by holding W (walking forward) and a continuous amplitude-6 yaw
-       sway through the entire RECORD phase, matching the warmup regime.
-
-    Camera motion is smoothstep-based (S-curve position, bell-shaped
-    velocity) so there are no step changes in dy. Pitch goes down then back
-    up, ending at the same neutral pitch the player started with.
-
-    Phases (all 200-frame budget at 20fps; total ~10s):
-        0..N        W held continuously (walking forward)
-        0..N        yaw sway dx = 6 sin(2pi i / 80) continuously
-        30..70      smoothstep pitch DOWN (~24 deg) over 2s
-        70..80      brief hold at bottom
-        75..80      right-click pulse (5 frames, during the hold)
-        80..120     smoothstep pitch UP back to neutral over 2s
-        120..N      walking forward at neutral pitch
+    Empirically the most robust offline action sequence at every steps_size
+    we have tested: produces coherent multi-second gameplay regardless of
+    biome (verified on grass, water, and Nether start frames). Earlier
+    candidates layered pitch-down + right-click on top to dramatize a
+    bucket-placement narrative, but that combination reads as 'digging
+    into ground' in training and biased the model toward going underground
+    (luma drifted from ~80 to ~17 over 10s).
     """
-    pitch_down_start, pitch_down_end = 30, 70
-    pitch_up_start, pitch_up_end = 80, 120
-    pitch_total_units = 80.0  # ~24 deg at camera_scaler ~ 0.3
-    pitch_down_dur = pitch_down_end - pitch_down_start
-    pitch_up_dur = pitch_up_end - pitch_up_start
-
     actions: list[list[int]] = []
     for i in range(n_frames):
-        # Pitch velocity from smoothstep position derivative; positive = down.
-        if pitch_down_start <= i < pitch_down_end:
-            x = (i - pitch_down_start + 0.5) / pitch_down_dur
-            pitch_v = pitch_total_units * 6.0 * x * (1.0 - x) / pitch_down_dur
-        elif pitch_up_start <= i < pitch_up_end:
-            x = (i - pitch_up_start + 0.5) / pitch_up_dur
-            pitch_v = -pitch_total_units * 6.0 * x * (1.0 - x) / pitch_up_dur
-        else:
-            pitch_v = 0.0
-
-        # Continuous yaw sway and walking — proven robust in warmup phase.
-        sway_dx = 6.0 * math.sin(2 * math.pi * i / 80.0)
-
-        dx = sway_dx
-        dy = pitch_v
-
-        keys: list[str] = ["key.keyboard.w"]
-        buttons: list[int] = [1] if 75 <= i < 80 else []
-
         action_dict = {
-            "mouse": {"dx": dx, "dy": dy, "buttons": buttons},
-            "keyboard": {"keys": keys},
+            "mouse": {
+                "dx": 6.0 * math.sin(2 * math.pi * i / 80.0),
+                "dy": 0.0,
+                "buttons": [],
+            },
+            "keyboard": {"keys": ["key.keyboard.w"]},
             "hotbar": 0,
         }
         env_action, _ = action_tok.json_action_to_env_action(action_dict, hotbar=True)
@@ -152,6 +117,8 @@ def main() -> int:
                     help="If >0, run a warmup phase to populate the KV cache before recording")
     ap.add_argument("--warmup-steps", type=int, default=4,
                     help="steps_size used during the warmup phase (default: 4 = live baseline)")
+    ap.add_argument("--capture-replay", default=None,
+                    help="If set, ignore --start-frame and --warmup-frames; prefill from a live-capture .pt file (frames + actions) and run record phase against that context.")
     ap.add_argument("--output", default="/workspace/dreamerv4-mc/.demos/bucket-water-latest.mp4")
     ap.add_argument("--dynamic-path", default="checkpoints/dynamic")
     ap.add_argument("--tokenizer-path", default="checkpoints/tokenizer")
@@ -171,7 +138,7 @@ def main() -> int:
         dynamic_model_path=args.dynamic_path,
         tokenizer_path=args.tokenizer_path,
         record_video_output_path="",
-        steps_size=args.warmup_steps if args.warmup_frames > 0 else args.steps_size,
+        steps_size=(args.warmup_steps if (args.warmup_frames > 0 and not args.capture_replay) else args.steps_size),
         device=device,
         dtype=dtype,
         random_generator=torch.Generator(device=device).manual_seed(args.seed),
@@ -180,15 +147,43 @@ def main() -> int:
     )
     print(f"[demo] model loaded in {time.perf_counter() - t_load:.1f}s", flush=True)
 
-    start_path = Path("/workspace/dreamerv4-mc/ui/static/start_frames") / args.start_frame
-    print(f"[demo] loading start frame: {start_path}", flush=True)
-    init_frames = load_start_frame(start_path, device, dtype)
+    if args.capture_replay:
+        init_frames = None
+        print("[demo] capture-replay mode: skipping single-image start frame load",
+              flush=True)
+    else:
+        start_path = Path("/workspace/dreamerv4-mc/ui/static/start_frames") / args.start_frame
+        print(f"[demo] loading start frame: {start_path}", flush=True)
+        init_frames = load_start_frame(start_path, device, dtype)
 
     action_tok = MineCraftActionTokenizer()
     action_tok.camera_scaler = 360.0 / 2400.0 * 2
 
-    # ---- WARMUP PHASE (optional) ----
-    if args.warmup_frames > 0:
+    # ---- PREFILL PATH SELECTION ----
+    if args.capture_replay:
+        # Multi-frame prefill from a real human-played trajectory.
+        # Bypasses both single-image prefill and synthetic warmup.
+        cap_path = Path(args.capture_replay)
+        print(f"[demo] CAPTURE-REPLAY: loading {cap_path}", flush=True)
+        payload = torch.load(cap_path, map_location="cpu", weights_only=False)
+        cap_frames = payload["frames"]            # (N, 3, H, W) fp16 in [-1, 1]
+        cap_actions = payload["action_ids"]       # (N, 12) long
+        n_cap = cap_frames.shape[0]
+        print(f"[demo] CAPTURE-REPLAY: {n_cap} frames, action_ids shape={tuple(cap_actions.shape)}",
+              flush=True)
+        # Reshape to (1, N, 3, H, W) and push to device/dtype.
+        cap_frames_dev = cap_frames.unsqueeze(0).to(device).to(dtype)
+        cap_actions_dev = cap_actions.to(device)
+        # Direct prefill - no generation in this phase.
+        t_pf = time.perf_counter()
+        model.prefilling_kvcache(init_frames=cap_frames_dev, action_ids=cap_actions_dev)
+        print(f"[demo] CAPTURE-REPLAY: prefilled in {time.perf_counter() - t_pf:.1f}s; "
+              f"frame_idx now at {model.frame_idx}", flush=True)
+        torch.cuda.empty_cache()
+        model.steps_size = args.steps_size
+        record_init_frames = None
+    elif args.warmup_frames > 0:
+        # ---- WARMUP PHASE (synthetic) ----
         warmup_actions = build_warmup_action_sequence(action_tok, args.warmup_frames).to(device)
         per_frame_ms = args.warmup_steps * 75 + 50
         eta_min = args.warmup_frames * per_frame_ms / 60000
@@ -203,10 +198,7 @@ def main() -> int:
         print(f"[demo] WARMUP done in {warm_elapsed:.1f}s "
               f"({warm_elapsed/args.warmup_frames:.2f}s/frame); "
               f"frame_idx now at {model.frame_idx}", flush=True)
-        # Switch to record-phase steps_size; the CUDA graph captures the model
-        # forward, NOT the denoising loop, so this is safe.
         model.steps_size = args.steps_size
-        # Skip prefill in the record call (cache already warm).
         record_init_frames = None
     else:
         record_init_frames = init_frames

@@ -48,6 +48,14 @@ class ServerConfig:
     mouse_clip: float = 25.0
     mouse_ema_alpha: float = 0.5
 
+    # Capture mode (multi-frame prefill seed source).
+    # If capture_dir is non-empty, the engine records every generated frame
+    # and the action that produced it; after capture_max_frames it writes a
+    # single .pt file plus a sidecar mp4 to capture_dir. V-key resets the
+    # buffer so multiple takes can be recorded in one session.
+    capture_dir: str = ""
+    capture_max_frames: int = 200
+
 # 初始化全局配置
 config = ServerConfig()
 
@@ -165,6 +173,15 @@ class InferenceEngine:
         # Mouse low-pass filter state; reset on V-key / scene refresh.
         self._mouse_ema_dx = 0.0
         self._mouse_ema_dy = 0.0
+        # Capture mode state; populated only when capture_dir is set.
+        self._capture_dir = Path(config.capture_dir) if config.capture_dir else None
+        self._capture_max = int(config.capture_max_frames)
+        self._captured_frames: list = []
+        self._captured_actions: list = []
+        self._capture_done: bool = False
+        if self._capture_dir is not None:
+            self._capture_dir.mkdir(parents=True, exist_ok=True)
+            print(f"[capture] active: dir={self._capture_dir} max_frames={self._capture_max}")
 
     def load_model(self):
         # 这里的 config.dynamic_model_path 已经被 argparse 或 env 更新
@@ -184,6 +201,38 @@ class InferenceEngine:
         )
         print("Model Loaded.")
 
+    def _save_capture(self):
+        """Serialize captured frames+actions to disk for offline replay."""
+        import time as _time
+        ts = _time.strftime("%Y%m%d-%H%M%S")
+        out_pt = self._capture_dir / f"capture-{ts}.pt"
+        latest = self._capture_dir / "latest.pt"
+        # Stack to (N, 3, H, W) and (N, 12).
+        frames = torch.stack(self._captured_frames, dim=0)
+        actions = torch.stack(self._captured_actions, dim=0)
+        payload = {
+            "frames": frames,             # fp16, [-1, 1], (N, 3, H, W)
+            "action_ids": actions,        # long, (N, 12)
+            "camera_scaler": float(self.config.camera_scaler),
+            "steps_size": int(self.config.steps_size),
+            "timestamp": ts,
+        }
+        torch.save(payload, out_pt)
+        torch.save(payload, latest)
+        print(f"[capture] saved {frames.shape[0]} frames to {out_pt}")
+        # Sidecar mp4 for human inspection of what was captured.
+        try:
+            import torchvision.io as _tvio
+            vid = ((frames.float().clamp(-1, 1) + 1) / 2 * 255).to(torch.uint8)
+            vid = vid.permute(0, 2, 3, 1)  # (N, H, W, 3)
+            mp4_path = out_pt.with_suffix(".mp4")
+            if mp4_path.exists():
+                mp4_path.unlink()
+            _tvio.write_video(str(mp4_path), vid, fps=20)
+            print(f"[capture] sidecar mp4: {mp4_path}")
+        except Exception as e:
+            print(f"[capture] sidecar mp4 failed (non-fatal): {e}")
+
     # ... [保留 reset_kv_cache 和 render 代码不变] ...
     def reset_kv_cache(self):
         if self.model:
@@ -193,6 +242,12 @@ class InferenceEngine:
         # a scene reset; clear it together with the KV cache.
         self._mouse_ema_dx = 0.0
         self._mouse_ema_dy = 0.0
+        # V-key starts a fresh capture take.
+        if self._capture_dir is not None and not self._capture_done:
+            if self._captured_frames:
+                print(f"[capture] V-key reset; discarding partial buffer ({len(self._captured_frames)} frames)")
+            self._captured_frames = []
+            self._captured_actions = []
 
     def render(self, state: InputState, dx: float, dy: float) -> bytes:
         if not self.model: return b''
@@ -238,6 +293,17 @@ class InferenceEngine:
 
         with self.lock:
             frame = self.model.render_next_frame(action_id=action_tensor)
+
+        # ---- Capture hook ----
+        if self._capture_dir is not None and not self._capture_done:
+            self._captured_frames.append(frame.detach().cpu().to(torch.float16))
+            self._captured_actions.append(action_tensor.detach().cpu())
+            n = len(self._captured_frames)
+            if n % 20 == 0:
+                print(f"[capture] {n}/{self._capture_max} frames")
+            if n >= self._capture_max:
+                self._save_capture()
+                self._capture_done = True
 
         img_tensor = ((frame.clamp(-1, 1) + 1) / 2 * 255).to(torch.uint8)
         img_array = img_tensor.permute(1, 2, 0).cpu().numpy()
@@ -527,6 +593,8 @@ if __name__ == "__main__":
     parser.add_argument("--steps_size", type=int, default=None, help="Override flow-matching denoise steps; valid powers of 2 only (1,2,4,8,...)")
     parser.add_argument("--mouse_clip", type=float, default=None, help="Per-frame |dx|,|dy| cap before action quantization (default 25.0; 0 disables)")
     parser.add_argument("--mouse_ema_alpha", type=float, default=None, help="One-pole IIR low-pass on per-frame mouse delta; 0.0 disables, 1.0 passthrough (default 0.5)")
+    parser.add_argument("--capture_dir", type=str, default=None, help="If set, record every generated (frame, action) pair to .pt files in this dir for multi-frame prefill replay")
+    parser.add_argument("--capture_max_frames", type=int, default=None, help="Number of frames to capture before auto-saving (default 200; ~10s @ 20fps)")
     
     args = parser.parse_args()
     if args.steps_size is not None and (
@@ -553,6 +621,12 @@ if __name__ == "__main__":
             parser.error("--mouse_ema_alpha must be in [0.0, 1.0]")
         config.mouse_ema_alpha = args.mouse_ema_alpha
     print(f"Mouse guard: clip=±{config.mouse_clip}/frame, ema_alpha={config.mouse_ema_alpha}")
+    if args.capture_dir is not None:
+        config.capture_dir = args.capture_dir
+    if args.capture_max_frames is not None:
+        if args.capture_max_frames < 1:
+            parser.error("--capture_max_frames must be >= 1")
+        config.capture_max_frames = args.capture_max_frames
         
     print(f"Starting server on {args.host}:{args.port}")
     
