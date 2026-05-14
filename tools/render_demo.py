@@ -36,31 +36,61 @@ from src.modules.actokenizer import MineCraftActionTokenizer
 
 
 def build_action_sequence(action_tok: MineCraftActionTokenizer, n_frames: int) -> torch.Tensor:
-    """Deterministic 'place-water-bucket' timeline (RECORD phase).
+    """Smooth "walk up, briefly look down to place item, walk on" timeline.
 
-    0..15   idle
-    15..30  look down (+15 dy/frame)
-    30..35  press digit "1" to ensure hotbar slot 0 is selected
-    35..50  hold right-click (use item)
-    50..N   idle, observe
+    Designed around two failure modes observed in earlier renders:
+    1. Cold steps_size=32 collapses to all-black absorbing state.
+       Mitigated by the WARMUP phase (a different concern, separate code).
+    2. Even with a warm cache, removing all "I'm moving" signals lets the
+       model fall into a different absorbing state: "predict previous frame
+       forever" (frame-delta drops to ~0 in the last 1-2 seconds). Mitigated
+       here by holding W (walking forward) and a continuous amplitude-6 yaw
+       sway through the entire RECORD phase, matching the warmup regime.
+
+    Camera motion is smoothstep-based (S-curve position, bell-shaped
+    velocity) so there are no step changes in dy. Pitch goes down then back
+    up, ending at the same neutral pitch the player started with.
+
+    Phases (all 200-frame budget at 20fps; total ~10s):
+        0..N        W held continuously (walking forward)
+        0..N        yaw sway dx = 6 sin(2pi i / 80) continuously
+        30..70      smoothstep pitch DOWN (~24 deg) over 2s
+        70..80      brief hold at bottom
+        75..80      right-click pulse (5 frames, during the hold)
+        80..120     smoothstep pitch UP back to neutral over 2s
+        120..N      walking forward at neutral pitch
     """
+    pitch_down_start, pitch_down_end = 30, 70
+    pitch_up_start, pitch_up_end = 80, 120
+    pitch_total_units = 80.0  # ~24 deg at camera_scaler ~ 0.3
+    pitch_down_dur = pitch_down_end - pitch_down_start
+    pitch_up_dur = pitch_up_end - pitch_up_start
+
     actions: list[list[int]] = []
     for i in range(n_frames):
-        keys: list[str] = []
-        dx = 0.0
-        dy = 0.0
-        buttons: list[int] = []
-        hotbar = 0
-        if 15 <= i < 30:
-            dy = 15.0
-        elif 30 <= i < 35:
-            keys.append("key.keyboard.1")
-        elif 35 <= i < 50:
-            buttons.append(1)
+        # Pitch velocity from smoothstep position derivative; positive = down.
+        if pitch_down_start <= i < pitch_down_end:
+            x = (i - pitch_down_start + 0.5) / pitch_down_dur
+            pitch_v = pitch_total_units * 6.0 * x * (1.0 - x) / pitch_down_dur
+        elif pitch_up_start <= i < pitch_up_end:
+            x = (i - pitch_up_start + 0.5) / pitch_up_dur
+            pitch_v = -pitch_total_units * 6.0 * x * (1.0 - x) / pitch_up_dur
+        else:
+            pitch_v = 0.0
+
+        # Continuous yaw sway and walking — proven robust in warmup phase.
+        sway_dx = 6.0 * math.sin(2 * math.pi * i / 80.0)
+
+        dx = sway_dx
+        dy = pitch_v
+
+        keys: list[str] = ["key.keyboard.w"]
+        buttons: list[int] = [1] if 75 <= i < 80 else []
+
         action_dict = {
             "mouse": {"dx": dx, "dy": dy, "buttons": buttons},
             "keyboard": {"keys": keys},
-            "hotbar": hotbar,
+            "hotbar": 0,
         }
         env_action, _ = action_tok.json_action_to_env_action(action_dict, hotbar=True)
         actions.append(action_tok.get_action_index_from_actiondict(env_action, include_gui=True))
