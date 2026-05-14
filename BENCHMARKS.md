@@ -161,40 +161,24 @@ ca63365c1ca36f263289750ee836f1edb2ade5b90dca0a3d0e79b008caceb4ed  benchmarks/ren
 
 ## Inline video gallery
 
-Each clip below is the same MP4 referenced in the tables above, served via jsDelivr so it embeds inline on GitHub. File metadata, settings, and checksums remain in the prior tables.
+GitHub markdown strips raw HTML5 `<video>` tags from README/blob views. The embedded version is therefore published as a repo-backed static gallery, with a CDN fallback serving the same checked-in `docs/video-gallery.html` file.
 
-### normal-steps4-warm200-walking.mp4
-<video src="https://cdn.jsdelivr.net/gh/blackfirebitcoin/Dreamerv4-MC-GB10@dgx-spark-gb10/benchmarks/renders/normal-steps4-warm200-walking.mp4" controls width="640" muted loop></video>
+- **[Open the embedded GitHub Pages gallery](https://blackfirebitcoin.github.io/Dreamerv4-MC-GB10/)**
+- [Open the CDN fallback gallery](https://cdn.jsdelivr.net/gh/blackfirebitcoin/Dreamerv4-MC-GB10@dgx-spark-gb10/docs/video-gallery.html)
 
-### capture-preview.mp4
-<video src="https://cdn.jsdelivr.net/gh/blackfirebitcoin/Dreamerv4-MC-GB10@dgx-spark-gb10/benchmarks/renders/capture-preview.mp4" controls width="640" muted loop></video>
+Direct MP4 links:
 
-### crickle-step8-60s.mp4
-<video src="https://cdn.jsdelivr.net/gh/blackfirebitcoin/Dreamerv4-MC-GB10@dgx-spark-gb10/benchmarks/renders/crickle-step8-60s.mp4" controls width="640" muted loop></video>
-
-### crickle-step8-60s-idle.mp4
-<video src="https://cdn.jsdelivr.net/gh/blackfirebitcoin/Dreamerv4-MC-GB10@dgx-spark-gb10/benchmarks/renders/crickle-step8-60s-idle.mp4" controls width="640" muted loop></video>
-
-### crickle-step4-30s-idle.mp4
-<video src="https://cdn.jsdelivr.net/gh/blackfirebitcoin/Dreamerv4-MC-GB10@dgx-spark-gb10/benchmarks/renders/crickle-step4-30s-idle.mp4" controls width="640" muted loop></video>
-
-### crickle-step4-90f-idle-20fps.mp4
-<video src="https://cdn.jsdelivr.net/gh/blackfirebitcoin/Dreamerv4-MC-GB10@dgx-spark-gb10/benchmarks/renders/crickle-step4-90f-idle-20fps.mp4" controls width="640" muted loop></video>
-
-### crickle-step4-30s-idle-browserfps.mp4
-<video src="https://cdn.jsdelivr.net/gh/blackfirebitcoin/Dreamerv4-MC-GB10@dgx-spark-gb10/benchmarks/renders/crickle-step4-30s-idle-browserfps.mp4" controls width="640" muted loop></video>
-
-### move3-200f-steps16.mp4
-<video src="https://cdn.jsdelivr.net/gh/blackfirebitcoin/Dreamerv4-MC-GB10@dgx-spark-gb10/benchmarks/renders/move3-200f-steps16.mp4" controls width="640" muted loop></video>
-
-### move3-200f-steps32.mp4
-<video src="https://cdn.jsdelivr.net/gh/blackfirebitcoin/Dreamerv4-MC-GB10@dgx-spark-gb10/benchmarks/renders/move3-200f-steps32.mp4" controls width="640" muted loop></video>
-
-### portal-steps4-explore.mp4
-<video src="https://cdn.jsdelivr.net/gh/blackfirebitcoin/Dreamerv4-MC-GB10@dgx-spark-gb10/benchmarks/renders/portal-steps4-explore.mp4" controls width="640" muted loop></video>
-
-### boat-steps4-explore.mp4
-<video src="https://cdn.jsdelivr.net/gh/blackfirebitcoin/Dreamerv4-MC-GB10@dgx-spark-gb10/benchmarks/renders/boat-steps4-explore.mp4" controls width="640" muted loop></video>
+- [`normal-steps4-warm200-walking.mp4`](benchmarks/renders/normal-steps4-warm200-walking.mp4) — Recommended live operating point.
+- [`capture-preview.mp4`](benchmarks/renders/capture-preview.mp4) — Live browser capture preview.
+- [`crickle-step8-60s.mp4`](benchmarks/renders/crickle-step8-60s.mp4) — Crickle, synthetic walking + yaw-sway.
+- [`crickle-step8-60s-idle.mp4`](benchmarks/renders/crickle-step8-60s-idle.mp4) — Crickle, static-camera idle.
+- [`crickle-step4-30s-idle.mp4`](benchmarks/renders/crickle-step4-30s-idle.mp4) — Crickle, idle at steps_size=4.
+- [`crickle-step4-90f-idle-20fps.mp4`](benchmarks/renders/crickle-step4-90f-idle-20fps.mp4) — Crickle, 90 generated idle frames.
+- [`crickle-step4-30s-idle-browserfps.mp4`](benchmarks/renders/crickle-step4-30s-idle-browserfps.mp4) — Crickle, browser-FPS approximation.
+- [`move3-200f-steps16.mp4`](benchmarks/renders/move3-200f-steps16.mp4) — Move 3 replay, steps_size=16.
+- [`move3-200f-steps32.mp4`](benchmarks/renders/move3-200f-steps32.mp4) — Move 3 replay, steps_size=32.
+- [`portal-steps4-explore.mp4`](benchmarks/renders/portal-steps4-explore.mp4) — Portal scene exploration.
+- [`boat-steps4-explore.mp4`](benchmarks/renders/boat-steps4-explore.mp4) — Boat / water scene exploration.
 
 ## Reproduction commands
 

@@ -8,15 +8,17 @@
 
 ## Video previews
 
-Recommended `steps_size=4` operating point on a normal Minecraft scene:
+GitHub README markdown strips raw HTML5 `<video>` tags, so the directly viewable embedded gallery is published as a repo-backed GitHub Pages page:
 
-<video src="https://cdn.jsdelivr.net/gh/blackfirebitcoin/Dreamerv4-MC-GB10@dgx-spark-gb10/benchmarks/renders/normal-steps4-warm200-walking.mp4" controls width="640" muted loop></video>
+- **[Open the embedded video gallery](https://blackfirebitcoin.github.io/Dreamerv4-MC-GB10/)**
+- [CDN fallback for the same checked-in gallery](https://cdn.jsdelivr.net/gh/blackfirebitcoin/Dreamerv4-MC-GB10@dgx-spark-gb10/docs/video-gallery.html)
 
-Static-camera crystallization (crickle pattern, 60s, idle):
+Highlights:
 
-<video src="https://cdn.jsdelivr.net/gh/blackfirebitcoin/Dreamerv4-MC-GB10@dgx-spark-gb10/benchmarks/renders/crickle-step8-60s-idle.mp4" controls width="640" muted loop></video>
+- [`normal-steps4-warm200-walking.mp4`](benchmarks/renders/normal-steps4-warm200-walking.mp4) — recommended `steps_size=4` operating point on a normal Minecraft scene.
+- [`crickle-step8-60s-idle.mp4`](benchmarks/renders/crickle-step8-60s-idle.mp4) — static-camera crystallization / fixed-point behavior.
 
-See [BENCHMARKS.md](BENCHMARKS.md) for the full inline gallery.
+See [BENCHMARKS.md](BENCHMARKS.md) for settings, measurements, checksums, and the full clip list.
 
 # Dreamer-MC: A Real-Time Autoregressive World Model for Infinite Video Generation
 
