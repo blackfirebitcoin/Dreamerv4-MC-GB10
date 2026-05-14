@@ -161,11 +161,11 @@ ca63365c1ca36f263289750ee836f1edb2ade5b90dca0a3d0e79b008caceb4ed  benchmarks/ren
 
 ## Inline video gallery
 
-GitHub markdown strips raw HTML5 `<video>` tags from README/blob views. The embedded gallery is therefore checked in as `docs/video-gallery.html` and served through a renderer that preserves native video controls.
+GitHub markdown strips raw HTML5 `<video>` tags from README/blob views. The embedded gallery is therefore checked in as `docs/video-gallery.html` and served through GitHub Pages:
 
-- **[Open the embedded video gallery](https://raw.githack.com/blackfirebitcoin/Dreamerv4-MC-GB10/dgx-spark-gb10/docs/video-gallery.html)**
-- [Gallery source in this repo](docs/video-gallery.html)
-- [GitHub Pages URL](https://blackfirebitcoin.github.io/Dreamerv4-MC-GB10/) — the `gh-pages` branch has been pushed; enable Pages in repo settings if this URL returns 404.
+- **[Open the embedded video gallery](https://blackfirebitcoin.github.io/Dreamerv4-MC-GB10/)** — served from the `gh-pages` branch.
+- [RawGitHack mirror](https://raw.githack.com/blackfirebitcoin/Dreamerv4-MC-GB10/dgx-spark-gb10/docs/video-gallery.html) — fallback if Pages is unavailable.
+- [Gallery source in this repo](docs/video-gallery.html).
 
 Direct MP4 links:
 
