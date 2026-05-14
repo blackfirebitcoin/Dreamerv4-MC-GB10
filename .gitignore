@@ -33,3 +33,9 @@ video/*
 build/*
 checkpoint/*
 *.zip
+# Local Dreamerv4-MC experiment artifacts
+.demos/
+.warm-start-sweep/
+dreamer4_mc.egg-info/
+__pycache__/
+tools/*.bak

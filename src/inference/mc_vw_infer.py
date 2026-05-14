@@ -124,20 +124,24 @@ class MCWorldModelInfer:
             output_video.append(init_frames[0])
         generate_frame_num = action_ids.shape[0]
         output_video = []
-        for frame_idx in tqdm(range(generate_frame_num)):
+        # BUG-FIX: use self.frame_idx (advanced past the prefill) as the
+        # absolute KV-cache slot, NOT the local loop counter. With a 1-frame
+        # prefill, prefilling_kvcache leaves self.frame_idx at 1, so the first
+        # generated frame must write to slot 1 (otherwise it overwrites the
+        # prefill's KV at slot 0 and the prefill image is effectively ignored).
+        for offset in tqdm(range(generate_frame_num)):
             noise = torch.randn(
                 (1, 1, 256, 32), 
                 device=self.model.device,
                 dtype=torch.bfloat16,
                 generator=self.random_generator,
             )
-            action_id = action_ids[frame_idx:frame_idx+1]
-           
-            
+            action_id = action_ids[offset:offset+1]
+            absolute_frame_idx = self.frame_idx
             token = generate_one_frame(
                 model=self.model,
                 x=noise,
-                frame_idx=frame_idx,
+                frame_idx=absolute_frame_idx,
                 steps_size=self.steps_size,
                 action_ids=action_id,
                 device=self.model.device,
@@ -148,9 +152,10 @@ class MCWorldModelInfer:
                 model=self.tokenizer,
                 tokens=token.clone(),
                 shape=(1, 1, 3, 384 // 16, 640 // 16),
-                frame_idx=frame_idx,
+                frame_idx=absolute_frame_idx,
                 device=self.model.device,
             )
+            self.frame_idx += 1
             output_video.append(frame[0])
         output_video = torch.cat(output_video, dim=0)
         return output_video
