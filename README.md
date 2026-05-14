@@ -14,11 +14,6 @@ GitHub README markdown strips raw HTML5 `<video>` tags, so the directly viewable
 - [RawGitHack mirror](https://raw.githack.com/blackfirebitcoin/Dreamerv4-MC-GB10/dgx-spark-gb10/docs/video-gallery.html) — fallback if Pages is unavailable.
 - [Gallery source in this repo](docs/video-gallery.html).
 
-Highlights:
-
-- [`normal-steps4-warm200-walking.mp4`](benchmarks/renders/normal-steps4-warm200-walking.mp4) — recommended `steps_size=4` operating point on a normal Minecraft scene.
-- [`crickle-step8-60s-idle.mp4`](benchmarks/renders/crickle-step8-60s-idle.mp4) — static-camera crystallization / fixed-point behavior.
-
 See [BENCHMARKS.md](BENCHMARKS.md) for settings, measurements, checksums, and the full clip list.
 
 # Dreamer-MC: A Real-Time Autoregressive World Model for Infinite Video Generation
