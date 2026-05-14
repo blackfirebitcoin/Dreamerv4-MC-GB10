@@ -8,10 +8,11 @@
 
 ## Video previews
 
-GitHub README markdown strips raw HTML5 `<video>` tags, so the directly viewable embedded gallery is published as a repo-backed GitHub Pages page:
+GitHub README markdown strips raw HTML5 `<video>` tags, so the directly viewable embedded gallery lives in a checked-in HTML page and is rendered through RawGitHack:
 
-- **[Open the embedded video gallery](https://blackfirebitcoin.github.io/Dreamerv4-MC-GB10/)**
-- [CDN fallback for the same checked-in gallery](https://cdn.jsdelivr.net/gh/blackfirebitcoin/Dreamerv4-MC-GB10@dgx-spark-gb10/docs/video-gallery.html)
+- **[Open the embedded video gallery](https://raw.githack.com/blackfirebitcoin/Dreamerv4-MC-GB10/dgx-spark-gb10/docs/video-gallery.html)**
+- [Gallery source in this repo](docs/video-gallery.html)
+- [GitHub Pages URL](https://blackfirebitcoin.github.io/Dreamerv4-MC-GB10/) — same `gh-pages` content, but it requires Pages to be enabled in repo settings before it stops returning 404.
 
 Highlights:
 
