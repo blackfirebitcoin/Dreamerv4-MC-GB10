@@ -465,8 +465,13 @@ if __name__ == "__main__":
     parser.add_argument("--record_video_output_path", type=str, help="Path to save recorded videos")
     parser.add_argument("--host", type=str, default="0.0.0.0", help="Host address")
     parser.add_argument("--port", type=int, default=8000, help="Port number")
+    parser.add_argument("--steps_size", type=int, default=None, help="Override flow-matching denoise steps; valid powers of 2 only (1,2,4,8,...)")
     
     args = parser.parse_args()
+    if args.steps_size is not None and (
+        args.steps_size < 1 or args.steps_size & (args.steps_size - 1)
+    ):
+        parser.error("--steps_size must be a positive power of two (1, 2, 4, 8, ...)")
     
     # 覆盖默认配置
     if args.dynamic_path:
@@ -476,6 +481,8 @@ if __name__ == "__main__":
         
     if args.record_video_output_path:
         config.record_video_output_path = args.record_video_output_path
+    if args.steps_size is not None:
+        config.steps_size = args.steps_size
         
     print(f"Starting server on {args.host}:{args.port}")
     
