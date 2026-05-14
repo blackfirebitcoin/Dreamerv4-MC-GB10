@@ -44,3 +44,6 @@ tools/*.bak
 
 # Local lab notebook (must stay private; never commit)
 .session-notes.md
+
+# Public benchmark render artifacts intentionally tracked in this fork
+!benchmarks/renders/*.mp4

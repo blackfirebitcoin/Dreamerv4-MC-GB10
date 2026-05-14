@@ -46,6 +46,10 @@ inference layer. No training-side or model-architecture changes.
 | Replay live-played KV cache state as multi-frame offline prefill | Capture-then-replay workflow: live UI saves `(frames, action_ids)` to `.pt`; offline renderer loads it as KV-cache prefill. |
 | Replay captured action_ids during record to close the synthetic-vs-real action seam at high steps_size | Splits captures into prefill + record halves so high-step renders can run on real human play. |
 
+## Benchmarks and render artifacts
+
+See [BENCHMARKS.md](BENCHMARKS.md) for the per-step FPS/stability table and a small gallery of rendered MP4s that anchor the findings below.
+
 ## Operating envelope (verified on GB10)
 
 | Mode | Settings | Throughput | Notes |
