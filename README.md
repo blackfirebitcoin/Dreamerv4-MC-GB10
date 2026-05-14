@@ -20,13 +20,13 @@ See [BENCHMARKS.md](BENCHMARKS.md) for settings, measurements, checksums, and th
 
 ## GB10 fork quickstart
 
-This fork targets **NVIDIA DGX Spark / GB10** (`sm_121`, aarch64) inside an NGC PyTorch container. The upstream Installation section further down clones `IamCreateAI/Dreamerv4-MC` and builds `flash-attn` from source on x86_64 + CUDA 12.1 — **use this section instead if you are running on GB10**, otherwise follow the upstream instructions below.
+If you are reviewing or running **this GB10 fork**, start here. This fork targets **NVIDIA DGX Spark / GB10** (`sm_121`, aarch64) inside an NGC PyTorch container. The upstream Installation section further down clones `IamCreateAI/Dreamerv4-MC` and builds `flash-attn` from source on x86_64 + CUDA 12.1 — **do not use that path for GB10**.
 
 **Prerequisites**
 
 - NVIDIA DGX Spark / GB10 (or another `sm_121` aarch64 host)
 - Docker with the NVIDIA Container Toolkit (`--gpus all` works)
-- ~12 GB free GPU memory (1.7 B dynamic model + 430 M tokenizer)
+- ~12 GB available accelerator / unified memory (1.7 B dynamic model + 430 M tokenizer)
 - Internet access on first run (pulls the NGC image and pip wheels into the container)
 
 **Setup**
