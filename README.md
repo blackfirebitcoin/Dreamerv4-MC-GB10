@@ -16,6 +16,49 @@ GitHub README markdown strips raw HTML5 `<video>` tags, so the directly viewable
 
 See [BENCHMARKS.md](BENCHMARKS.md) for settings, measurements, checksums, and the full clip list.
 
+---
+
+## GB10 fork quickstart
+
+This fork targets **NVIDIA DGX Spark / GB10** (`sm_121`, aarch64) inside an NGC PyTorch container. The upstream Installation section further down clones `IamCreateAI/Dreamerv4-MC` and builds `flash-attn` from source on x86_64 + CUDA 12.1 — **use this section instead if you are running on GB10**, otherwise follow the upstream instructions below.
+
+**Prerequisites**
+
+- NVIDIA DGX Spark / GB10 (or another `sm_121` aarch64 host)
+- Docker with the NVIDIA Container Toolkit (`--gpus all` works)
+- ~12 GB free GPU memory (1.7 B dynamic model + 430 M tokenizer)
+- Internet access on first run (pulls the NGC image and pip wheels into the container)
+
+**Setup**
+
+```bash
+# 1. Clone THIS fork (not upstream)
+git clone https://github.com/blackfirebitcoin/Dreamerv4-MC-GB10.git
+cd Dreamerv4-MC-GB10
+
+# 2. Download checkpoints from upstream HuggingFace into ./checkpoints/
+#    Required layout:  checkpoints/dynamic/   checkpoints/tokenizer/
+#    https://huggingface.co/IamCreateAI/Dreamerv4-MC
+
+# 3. Start the live inference container at the recommended steps_size=4
+scripts/ngc/start-live.sh 4
+
+# 4. Open the browser UI (or tunnel from your dev machine if remote)
+#    http://localhost:8765   —   Press Z to lock the mouse, WASD to move, V to refresh the scene.
+```
+
+Boot takes ~30 seconds (pip install inside the container + model load + CUDA-graph capture). Tail per-frame timing with:
+
+```bash
+docker logs -f dreamerv4-ngc 2>&1 | grep -E 'TIMING|ACTION'
+```
+
+**Other run modes (offline render, capture/replay, high-step warmup-then-record):** see [`scripts/ngc/`](scripts/ngc/) and the [Quickstart section in FORK.md](FORK.md#quickstart). For the verified per-step operating envelope and rendered demo MP4s, see [BENCHMARKS.md](BENCHMARKS.md).
+
+The original upstream README continues below.
+
+---
+
 # Dreamer-MC: A Real-Time Autoregressive World Model for Infinite Video Generation
 
 <div align="center">
