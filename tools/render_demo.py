@@ -63,6 +63,28 @@ def build_action_sequence(action_tok: MineCraftActionTokenizer, n_frames: int) -
     return torch.tensor(actions, dtype=torch.long)
 
 
+def build_idle_action_sequence(action_tok: MineCraftActionTokenizer, n_frames: int) -> torch.Tensor:
+    """Motionless idle: no keys held, no mouse motion, no buttons; hotbar state fixed.
+
+    Use when the goal is to watch the model evolve a scene with zero player
+    movement input. Keeps the hotbar-state token so offline idle matches the live browser no-input path. Avoids the walk-forward+sway default that was injecting motion
+    into static-camera renders. Works at any steps_size, but coherence
+    still depends on the underlying mode -- standing still in cold high-step
+    modes can still drift because the model has no anchor and must regress
+    purely against KV cache.
+    """
+    actions: list[list[int]] = []
+    for _ in range(n_frames):
+        action_dict = {
+            "mouse": {"dx": 0.0, "dy": 0.0, "buttons": []},
+            "keyboard": {"keys": []},
+            "hotbar": 0,
+        }
+        env_action, _ = action_tok.json_action_to_env_action(action_dict, hotbar=True)
+        actions.append(action_tok.get_action_index_from_actiondict(env_action, include_gui=True))
+    return torch.tensor(actions, dtype=torch.long)
+
+
 def build_warmup_action_sequence(action_tok: MineCraftActionTokenizer, n_frames: int) -> torch.Tensor:
     """Cheap, varied gameplay actions used only to fill the KV cache.
 
@@ -122,6 +144,10 @@ def main() -> int:
                     help="If set, ignore --start-frame and --warmup-frames; prefill from a live-capture .pt file (frames + actions) and run record phase against that context.")
     ap.add_argument("--capture-prefill-frames", type=int, default=0,
                     help="With --capture-replay: how many leading captured frames to use as prefill. 0 = use all frames as prefill + synthetic record actions (legacy behavior). >0 = split: first N frames -> prefill, next --n-frames captured action_ids -> record actions (Move 3 captured-action continuation).")
+    ap.add_argument("--idle", action="store_true",
+                    help="RECORD with motionless idle: no keys, no mouse motion. "
+                         "Overrides the default walk-forward+sway. Ignored when "
+                         "--capture-prefill-frames>0 (captured actions take priority).")
     ap.add_argument("--capture-record-synthetic", action="store_true",
                     help="With --capture-prefill-frames>0: force synthetic walk-forward+sway record actions even though captured actions would be available. Useful for ablating the seam hypothesis.")
     ap.add_argument("--output", default="/workspace/dreamerv4-mc/.demos/bucket-water-latest.mp4")
@@ -260,6 +286,9 @@ def main() -> int:
     if captured_record_actions is not None:
         record_actions = captured_record_actions
         print(f"[demo] RECORD using {record_actions.shape[0]} captured action_ids", flush=True)
+    elif args.idle:
+        record_actions = build_idle_action_sequence(action_tok, args.n_frames).to(device)
+        print(f"[demo] RECORD using IDLE action sequence (no movement input, {args.n_frames}f)", flush=True)
     else:
         record_actions = build_action_sequence(action_tok, args.n_frames).to(device)
     per_frame_ms = args.steps_size * 75 + 50
