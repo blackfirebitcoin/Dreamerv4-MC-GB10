@@ -159,6 +159,43 @@ ca63365c1ca36f263289750ee836f1edb2ade5b90dca0a3d0e79b008caceb4ed  benchmarks/ren
 01cb5152463133832d1de8a627e6b7aa52f4963082ef4247db08532783c29693  benchmarks/renders/normal-steps4-warm200-walking.mp4
 ```
 
+## Inline video gallery
+
+Each clip below is the same MP4 referenced in the tables above, served via jsDelivr so it embeds inline on GitHub. File metadata, settings, and checksums remain in the prior tables.
+
+### normal-steps4-warm200-walking.mp4
+<video src="https://cdn.jsdelivr.net/gh/blackfirebitcoin/Dreamerv4-MC-GB10@dgx-spark-gb10/benchmarks/renders/normal-steps4-warm200-walking.mp4" controls width="640" muted loop></video>
+
+### capture-preview.mp4
+<video src="https://cdn.jsdelivr.net/gh/blackfirebitcoin/Dreamerv4-MC-GB10@dgx-spark-gb10/benchmarks/renders/capture-preview.mp4" controls width="640" muted loop></video>
+
+### crickle-step8-60s.mp4
+<video src="https://cdn.jsdelivr.net/gh/blackfirebitcoin/Dreamerv4-MC-GB10@dgx-spark-gb10/benchmarks/renders/crickle-step8-60s.mp4" controls width="640" muted loop></video>
+
+### crickle-step8-60s-idle.mp4
+<video src="https://cdn.jsdelivr.net/gh/blackfirebitcoin/Dreamerv4-MC-GB10@dgx-spark-gb10/benchmarks/renders/crickle-step8-60s-idle.mp4" controls width="640" muted loop></video>
+
+### crickle-step4-30s-idle.mp4
+<video src="https://cdn.jsdelivr.net/gh/blackfirebitcoin/Dreamerv4-MC-GB10@dgx-spark-gb10/benchmarks/renders/crickle-step4-30s-idle.mp4" controls width="640" muted loop></video>
+
+### crickle-step4-90f-idle-20fps.mp4
+<video src="https://cdn.jsdelivr.net/gh/blackfirebitcoin/Dreamerv4-MC-GB10@dgx-spark-gb10/benchmarks/renders/crickle-step4-90f-idle-20fps.mp4" controls width="640" muted loop></video>
+
+### crickle-step4-30s-idle-browserfps.mp4
+<video src="https://cdn.jsdelivr.net/gh/blackfirebitcoin/Dreamerv4-MC-GB10@dgx-spark-gb10/benchmarks/renders/crickle-step4-30s-idle-browserfps.mp4" controls width="640" muted loop></video>
+
+### move3-200f-steps16.mp4
+<video src="https://cdn.jsdelivr.net/gh/blackfirebitcoin/Dreamerv4-MC-GB10@dgx-spark-gb10/benchmarks/renders/move3-200f-steps16.mp4" controls width="640" muted loop></video>
+
+### move3-200f-steps32.mp4
+<video src="https://cdn.jsdelivr.net/gh/blackfirebitcoin/Dreamerv4-MC-GB10@dgx-spark-gb10/benchmarks/renders/move3-200f-steps32.mp4" controls width="640" muted loop></video>
+
+### portal-steps4-explore.mp4
+<video src="https://cdn.jsdelivr.net/gh/blackfirebitcoin/Dreamerv4-MC-GB10@dgx-spark-gb10/benchmarks/renders/portal-steps4-explore.mp4" controls width="640" muted loop></video>
+
+### boat-steps4-explore.mp4
+<video src="https://cdn.jsdelivr.net/gh/blackfirebitcoin/Dreamerv4-MC-GB10@dgx-spark-gb10/benchmarks/renders/boat-steps4-explore.mp4" controls width="640" muted loop></video>
+
 ## Reproduction commands
 
 Live baseline:

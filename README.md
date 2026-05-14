@@ -6,6 +6,18 @@
 
 ---
 
+## Video previews
+
+Recommended `steps_size=4` operating point on a normal Minecraft scene:
+
+<video src="https://cdn.jsdelivr.net/gh/blackfirebitcoin/Dreamerv4-MC-GB10@dgx-spark-gb10/benchmarks/renders/normal-steps4-warm200-walking.mp4" controls width="640" muted loop></video>
+
+Static-camera crystallization (crickle pattern, 60s, idle):
+
+<video src="https://cdn.jsdelivr.net/gh/blackfirebitcoin/Dreamerv4-MC-GB10@dgx-spark-gb10/benchmarks/renders/crickle-step8-60s-idle.mp4" controls width="640" muted loop></video>
+
+See [BENCHMARKS.md](BENCHMARKS.md) for the full inline gallery.
+
 # Dreamer-MC: A Real-Time Autoregressive World Model for Infinite Video Generation
 
 <div align="center">
