@@ -169,8 +169,8 @@ GitHub markdown strips raw HTML5 `<video>` tags from README/blob views. The embe
 
 Direct MP4 links:
 
-- [`normal-steps4-warm200-walking.mp4`](benchmarks/renders/normal-steps4-warm200-walking.mp4) — Recommended live operating point.
-- [`capture-preview.mp4`](benchmarks/renders/capture-preview.mp4) — Live browser capture preview.
+- [`capture-preview.mp4`](benchmarks/renders/capture-preview.mp4) — Recommended live operating point (live browser capture at steps_size=4).
+- [`normal-steps4-warm200-walking.mp4`](benchmarks/renders/normal-steps4-warm200-walking.mp4) — Warmup-then-record offline render at steps_size=4.
 - [`crickle-step8-60s.mp4`](benchmarks/renders/crickle-step8-60s.mp4) — Crickle, synthetic walking + yaw-sway.
 - [`crickle-step8-60s-idle.mp4`](benchmarks/renders/crickle-step8-60s-idle.mp4) — Crickle, static-camera idle.
 - [`crickle-step4-30s-idle.mp4`](benchmarks/renders/crickle-step4-30s-idle.mp4) — Crickle, idle at steps_size=4.
