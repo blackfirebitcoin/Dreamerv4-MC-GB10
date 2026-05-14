@@ -2,6 +2,7 @@
 > See **[FORK.md](FORK.md)** for what's different from upstream and the verified operating envelope.
 > See **[BENCHMARKS.md](BENCHMARKS.md)** for per-step FPS measurements and rendered test clips.
 > Upstream: https://github.com/IamCreateAI/Dreamerv4-MC
+> ⚠️ **Operating note:** `steps_size` ≥ 16 produces rapid scene decoherence on this checkpoint; live and cold-offline use should stay on `steps_size in {4, 8}`. See [BENCHMARKS.md](BENCHMARKS.md) for measurements.
 
 ---
 

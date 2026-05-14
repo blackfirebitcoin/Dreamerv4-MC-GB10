@@ -127,6 +127,38 @@ c3229f22d2cf90a883b84a6c4eed6d71b4af0eaaa15d665ecac92fe1c794aa64  benchmarks/ren
 525b7080beae7897fb18aba5a32453aa98bf4b7f7eb8bade176bb84b02115cbb  benchmarks/renders/move3-200f-steps32.mp4
 ```
 
+
+### Live capture + steps=4 exploration clips
+
+These clips were recorded during interactive testing on GB10. They sit alongside the
+crickle/Move 3 clips above and exist to show what the model produces on real
+in-distribution Minecraft scenes (not just synthetic geometric prompts) at the
+recommended live `steps_size=4` operating point.
+
+| File | What it demonstrates | Settings | Size |
+|---|---|---|---:|
+| [`benchmarks/renders/capture-preview.mp4`](benchmarks/renders/capture-preview.mp4) | Sidecar MP4 emitted by the live capture-mode server while a human played in the browser. Demonstrates the live `--capture_dir` -> `.captures/<ts>.pt` + sidecar pipeline that feeds `render-replay.sh`. | live capture, `steps_size=4`, 200 frames, 10s @ 20fps, 640x360 native | 1.9 MB |
+| [`benchmarks/renders/portal-steps4-explore.mp4`](benchmarks/renders/portal-steps4-explore.mp4) | Offline render against a portal start frame at the recommended live setting; useful comparison point for the portal-transition issue documented in FORK.md. | offline render, `steps_size=4`, 200 frames, 10s @ 20fps, 640x384 | 0.7 MB |
+| [`benchmarks/renders/boat-steps4-explore.mp4`](benchmarks/renders/boat-steps4-explore.mp4) | Offline render against a boat / water start frame at the recommended live setting. Water is a useful stress test for ambient-motion learned priors. | offline render, `steps_size=4`, 200 frames, 10s @ 20fps, 640x384 | 1.2 MB |
+| [`benchmarks/renders/normal-steps4-warm200-walking.mp4`](benchmarks/renders/normal-steps4-warm200-walking.mp4) | Offline render with the warmup-then-record protocol: a 200-frame walking warmup phase fills the KV cache, then 200 frames are recorded at `steps_size=4`. This is the exact protocol that unlocks high-step renders without cold collapse. | offline render, warmup 200 frames @ steps=4 then record 200 frames @ steps=4 with walking action sequence, 10s @ 20fps, 640x384 | 1.4 MB |
+
+### Operating reminder
+
+`steps_size` of 16 and higher produces rapid scene decoherence on this checkpoint
+(usually within ~4-8 seconds of cold start). The live and cold-offline operating
+envelope should stay at `steps_size in {4, 8}`. Higher step counts only become
+viable when paired with the warmup-then-record protocol shown above; even then,
+they are demo-grade rather than interactive-grade.
+
+### Additional render checksums
+
+```text
+c44b44814317bb7208fc64a644e603085cf986678ae363034089073f60b1fdbb  benchmarks/renders/capture-preview.mp4
+f17d5e5c193f9b6a160c8293be58bd3466f21b5144c086ee4c64e8d0c3669a7a  benchmarks/renders/portal-steps4-explore.mp4
+ca63365c1ca36f263289750ee836f1edb2ade5b90dca0a3d0e79b008caceb4ed  benchmarks/renders/boat-steps4-explore.mp4
+01cb5152463133832d1de8a627e6b7aa52f4963082ef4247db08532783c29693  benchmarks/renders/normal-steps4-warm200-walking.mp4
+```
+
 ## Reproduction commands
 
 Live baseline:
