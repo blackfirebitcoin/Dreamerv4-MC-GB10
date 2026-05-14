@@ -174,12 +174,23 @@ class InferenceEngine:
         # Mouse low-pass filter state; reset on V-key / scene refresh.
         self._mouse_ema_dx = 0.0
         self._mouse_ema_dy = 0.0
-        # Capture mode state; populated only when capture_dir is set.
-        self._capture_dir = Path(config.capture_dir) if config.capture_dir else None
+        # Capture mode state. Do not read config.capture_dir here: this
+        # engine is constructed at import time, before argparse mutates the
+        # shared config object. load_model() initializes capture after CLI
+        # overrides have been applied.
+        self._capture_dir = None
         self._capture_max = int(config.capture_max_frames)
         self._captured_frames: list = []
         self._captured_actions: list = []
         self._capture_done: bool = False
+
+    def _init_capture_state(self):
+        """Initialize capture after CLI config overrides are visible."""
+        self._capture_dir = Path(self.config.capture_dir) if self.config.capture_dir else None
+        self._capture_max = int(self.config.capture_max_frames)
+        self._captured_frames = []
+        self._captured_actions = []
+        self._capture_done = False
         if self._capture_dir is not None:
             self._capture_dir.mkdir(parents=True, exist_ok=True)
             print(f"[capture] active: dir={self._capture_dir} max_frames={self._capture_max}")
@@ -188,6 +199,7 @@ class InferenceEngine:
         # 这里的 config.dynamic_model_path 已经被 argparse 或 env 更新
         print(f"Loading Model from: {self.config.dynamic_model_path}")
         print(f"Loading Tokenizer from: {self.config.tokenizer_path}")
+        self._init_capture_state()
         
         self.model = MCWorldModelInfer(
             dynamic_model_path=self.config.dynamic_model_path,
