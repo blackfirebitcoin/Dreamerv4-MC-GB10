@@ -325,6 +325,12 @@ static_dir_path = BASE_DIR / "static"
 app = FastAPI(lifespan=lifespan)
 app.mount("/static", StaticFiles(directory=static_dir_path), name="static")
 #app.mount("static", StaticFiles(directory="static"), name="static")
+
+# Only one active websocket may drive the global world model at a time.
+# Each connection owns an expensive render_loop; multiple tabs/profilers would
+# contend on InferenceEngine.lock and roughly divide the FPS between them.
+active_ws_lock = asyncio.Lock()
+active_ws: Optional[WebSocket] = None
 @app.get("/api/start-frames")
 def get_start_frames():
     # 指向 static/start_frames 目录
@@ -351,7 +357,17 @@ def index():
 
 @app.websocket("/ws")
 async def ws_endpoint(ws: WebSocket):
+    global active_ws
     await ws.accept()
+    async with active_ws_lock:
+        if active_ws is not None:
+            await ws.send_text(json.dumps({
+                "type": "error",
+                "message": "Another Dreamerv4-MC browser/client is already connected. Close the other tab before opening a new one.",
+            }))
+            await ws.close(code=1013)
+            return
+        active_ws = ws
     
     state_manager = InputStateManager()
     latest_frame = LatestFrameContainer()
@@ -448,10 +464,15 @@ async def ws_endpoint(ws: WebSocket):
     t2 = asyncio.create_task(render_loop())
     t3 = asyncio.create_task(send_loop())
     
-    await stop_event.wait()
-    t1.cancel()
-    t2.cancel()
-    t3.cancel()
+    try:
+        await stop_event.wait()
+    finally:
+        async with active_ws_lock:
+            if active_ws is ws:
+                active_ws = None
+        t1.cancel()
+        t2.cancel()
+        t3.cancel()
 
 # ==========================================
 # 5. 命令行启动入口 (新增)
