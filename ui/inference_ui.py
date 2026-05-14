@@ -637,13 +637,15 @@ if __name__ == "__main__":
         if not (0.0 <= args.mouse_ema_alpha <= 1.0):
             parser.error("--mouse_ema_alpha must be in [0.0, 1.0]")
         config.mouse_ema_alpha = args.mouse_ema_alpha
-    print(f"Mouse guard: clip=±{config.mouse_clip}/frame, ema_alpha={config.mouse_ema_alpha}")
     if args.capture_dir is not None:
         config.capture_dir = args.capture_dir
     if args.capture_max_frames is not None:
         if args.capture_max_frames < 1:
             parser.error("--capture_max_frames must be >= 1")
         config.capture_max_frames = args.capture_max_frames
+    print(f"Mouse guard: clip=±{config.mouse_clip}/frame, ema_alpha={config.mouse_ema_alpha}")
+    if config.capture_dir:
+        print(f"Capture requested: dir={config.capture_dir}, max_frames={config.capture_max_frames}")
         
     print(f"Starting server on {args.host}:{args.port}")
     
