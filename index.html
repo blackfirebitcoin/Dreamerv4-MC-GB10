@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dreamerv4-MC GB10 benchmark video gallery</title>
+  <style>
+    :root { color-scheme: dark; --bg: #0d1117; --panel: #161b22; --text: #e6edf3; --muted: #8b949e; --border: #30363d; --link: #58a6ff; }
+    * { box-sizing: border-box; }
+    body { margin: 0; font: 16px/1.5 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: var(--bg); color: var(--text); }
+    main { max-width: 980px; margin: 0 auto; padding: 32px 20px 56px; }
+    header { margin-bottom: 28px; }
+    h1 { margin: 0 0 8px; font-size: clamp(2rem, 5vw, 3.4rem); line-height: 1.05; }
+    h2 { margin: 0 0 4px; font-size: 1.3rem; }
+    p { margin: 8px 0; }
+    a { color: var(--link); }
+    .lede, .filename { color: var(--muted); }
+    .clip { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 18px; margin: 18px 0; box-shadow: 0 8px 24px rgba(0,0,0,.18); }
+    video { display: block; width: min(100%, 640px); height: auto; margin: 14px 0; border-radius: 10px; border: 1px solid var(--border); background: #000; }
+    nav { display: flex; flex-wrap: wrap; gap: 8px; margin: 18px 0 8px; }
+    nav a { border: 1px solid var(--border); border-radius: 999px; padding: 4px 10px; text-decoration: none; color: var(--text); background: rgba(88,166,255,.08); }
+    code { background: rgba(110,118,129,.25); padding: 1px 5px; border-radius: 5px; }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>Dreamerv4-MC GB10 benchmark video gallery</h1>
+      <p class="lede">Inline HTML5 previews for the MP4 benchmark renders tracked in <code>benchmarks/renders/</code> on the <code>dgx-spark-gb10</code> branch.</p>
+      <p><a href="https://github.com/blackfirebitcoin/Dreamerv4-MC-GB10">Back to repository</a> · <a href="https://github.com/blackfirebitcoin/Dreamerv4-MC-GB10/blob/dgx-spark-gb10/BENCHMARKS.md">Benchmark notes</a></p>
+    </header>
+    <nav aria-label="Clip list">
+      <a href="#normal-steps4-warm200-walking.mp4">normal-steps4-warm200-walking</a>
+      <a href="#capture-preview.mp4">capture-preview</a>
+      <a href="#crickle-step8-60s.mp4">crickle-step8-60s</a>
+      <a href="#crickle-step8-60s-idle.mp4">crickle-step8-60s-idle</a>
+      <a href="#crickle-step4-30s-idle.mp4">crickle-step4-30s-idle</a>
+      <a href="#crickle-step4-90f-idle-20fps.mp4">crickle-step4-90f-idle-20fps</a>
+      <a href="#crickle-step4-30s-idle-browserfps.mp4">crickle-step4-30s-idle-browserfps</a>
+      <a href="#move3-200f-steps16.mp4">move3-200f-steps16</a>
+      <a href="#move3-200f-steps32.mp4">move3-200f-steps32</a>
+      <a href="#portal-steps4-explore.mp4">portal-steps4-explore</a>
+      <a href="#boat-steps4-explore.mp4">boat-steps4-explore</a>
+    </nav>
+      <article class="clip" id="normal-steps4-warm200-walking.mp4">
+        <h2>Recommended live operating point</h2>
+        <p class="filename">normal-steps4-warm200-walking.mp4</p>
+        <video controls muted playsinline preload="metadata" width="640" src="https://cdn.jsdelivr.net/gh/blackfirebitcoin/Dreamerv4-MC-GB10@dgx-spark-gb10/benchmarks/renders/normal-steps4-warm200-walking.mp4"></video>
+        <p>Normal Minecraft scene, warmup-then-record protocol, steps_size=4.</p>
+        <p><a href="https://cdn.jsdelivr.net/gh/blackfirebitcoin/Dreamerv4-MC-GB10@dgx-spark-gb10/benchmarks/renders/normal-steps4-warm200-walking.mp4">Open MP4 directly</a> · <a href="https://github.com/blackfirebitcoin/Dreamerv4-MC-GB10/blob/dgx-spark-gb10/benchmarks/renders/normal-steps4-warm200-walking.mp4">View file in repo</a></p>
+      </article>
+      <article class="clip" id="capture-preview.mp4">
+        <h2>Live browser capture preview</h2>
+        <p class="filename">capture-preview.mp4</p>
+        <video controls muted playsinline preload="metadata" width="640" src="https://cdn.jsdelivr.net/gh/blackfirebitcoin/Dreamerv4-MC-GB10@dgx-spark-gb10/benchmarks/renders/capture-preview.mp4"></video>
+        <p>Sidecar MP4 emitted by the live capture-mode server during human browser testing.</p>
+        <p><a href="https://cdn.jsdelivr.net/gh/blackfirebitcoin/Dreamerv4-MC-GB10@dgx-spark-gb10/benchmarks/renders/capture-preview.mp4">Open MP4 directly</a> · <a href="https://github.com/blackfirebitcoin/Dreamerv4-MC-GB10/blob/dgx-spark-gb10/benchmarks/renders/capture-preview.mp4">View file in repo</a></p>
+      </article>
+      <article class="clip" id="crickle-step8-60s.mp4">
+        <h2>Crickle, synthetic walking + yaw-sway</h2>
+        <p class="filename">crickle-step8-60s.mp4</p>
+        <video controls muted playsinline preload="metadata" width="640" src="https://cdn.jsdelivr.net/gh/blackfirebitcoin/Dreamerv4-MC-GB10@dgx-spark-gb10/benchmarks/renders/crickle-step8-60s.mp4"></video>
+        <p>Motion-driven stress test at steps_size=8 for 60 seconds.</p>
+        <p><a href="https://cdn.jsdelivr.net/gh/blackfirebitcoin/Dreamerv4-MC-GB10@dgx-spark-gb10/benchmarks/renders/crickle-step8-60s.mp4">Open MP4 directly</a> · <a href="https://github.com/blackfirebitcoin/Dreamerv4-MC-GB10/blob/dgx-spark-gb10/benchmarks/renders/crickle-step8-60s.mp4">View file in repo</a></p>
+      </article>
+      <article class="clip" id="crickle-step8-60s-idle.mp4">
+        <h2>Crickle, static-camera idle</h2>
+        <p class="filename">crickle-step8-60s-idle.mp4</p>
+        <video controls muted playsinline preload="metadata" width="640" src="https://cdn.jsdelivr.net/gh/blackfirebitcoin/Dreamerv4-MC-GB10@dgx-spark-gb10/benchmarks/renders/crickle-step8-60s-idle.mp4"></video>
+        <p>Motionless steps_size=8 render showing crystallization / fixed-point behavior.</p>
+        <p><a href="https://cdn.jsdelivr.net/gh/blackfirebitcoin/Dreamerv4-MC-GB10@dgx-spark-gb10/benchmarks/renders/crickle-step8-60s-idle.mp4">Open MP4 directly</a> · <a href="https://github.com/blackfirebitcoin/Dreamerv4-MC-GB10/blob/dgx-spark-gb10/benchmarks/renders/crickle-step8-60s-idle.mp4">View file in repo</a></p>
+      </article>
+      <article class="clip" id="crickle-step4-30s-idle.mp4">
+        <h2>Crickle, idle at steps_size=4</h2>
+        <p class="filename">crickle-step4-30s-idle.mp4</p>
+        <video controls muted playsinline preload="metadata" width="640" src="https://cdn.jsdelivr.net/gh/blackfirebitcoin/Dreamerv4-MC-GB10@dgx-spark-gb10/benchmarks/renders/crickle-step4-30s-idle.mp4"></video>
+        <p>Browser inference settings, encoded at offline 20fps for 30 seconds.</p>
+        <p><a href="https://cdn.jsdelivr.net/gh/blackfirebitcoin/Dreamerv4-MC-GB10@dgx-spark-gb10/benchmarks/renders/crickle-step4-30s-idle.mp4">Open MP4 directly</a> · <a href="https://github.com/blackfirebitcoin/Dreamerv4-MC-GB10/blob/dgx-spark-gb10/benchmarks/renders/crickle-step4-30s-idle.mp4">View file in repo</a></p>
+      </article>
+      <article class="clip" id="crickle-step4-90f-idle-20fps.mp4">
+        <h2>Crickle, 90 generated idle frames</h2>
+        <p class="filename">crickle-step4-90f-idle-20fps.mp4</p>
+        <video controls muted playsinline preload="metadata" width="640" src="https://cdn.jsdelivr.net/gh/blackfirebitcoin/Dreamerv4-MC-GB10@dgx-spark-gb10/benchmarks/renders/crickle-step4-90f-idle-20fps.mp4"></video>
+        <p>Raw 90-frame browser-wall-clock comparison clip encoded at 20fps.</p>
+        <p><a href="https://cdn.jsdelivr.net/gh/blackfirebitcoin/Dreamerv4-MC-GB10@dgx-spark-gb10/benchmarks/renders/crickle-step4-90f-idle-20fps.mp4">Open MP4 directly</a> · <a href="https://github.com/blackfirebitcoin/Dreamerv4-MC-GB10/blob/dgx-spark-gb10/benchmarks/renders/crickle-step4-90f-idle-20fps.mp4">View file in repo</a></p>
+      </article>
+      <article class="clip" id="crickle-step4-30s-idle-browserfps.mp4">
+        <h2>Crickle, browser-FPS approximation</h2>
+        <p class="filename">crickle-step4-30s-idle-browserfps.mp4</p>
+        <video controls muted playsinline preload="metadata" width="640" src="https://cdn.jsdelivr.net/gh/blackfirebitcoin/Dreamerv4-MC-GB10@dgx-spark-gb10/benchmarks/renders/crickle-step4-30s-idle-browserfps.mp4"></video>
+        <p>The same 90 frames stretched to approximate 30 seconds at ~3fps browser pace.</p>
+        <p><a href="https://cdn.jsdelivr.net/gh/blackfirebitcoin/Dreamerv4-MC-GB10@dgx-spark-gb10/benchmarks/renders/crickle-step4-30s-idle-browserfps.mp4">Open MP4 directly</a> · <a href="https://github.com/blackfirebitcoin/Dreamerv4-MC-GB10/blob/dgx-spark-gb10/benchmarks/renders/crickle-step4-30s-idle-browserfps.mp4">View file in repo</a></p>
+      </article>
+      <article class="clip" id="move3-200f-steps16.mp4">
+        <h2>Move 3 replay, steps_size=16</h2>
+        <p class="filename">move3-200f-steps16.mp4</p>
+        <video controls muted playsinline preload="metadata" width="640" src="https://cdn.jsdelivr.net/gh/blackfirebitcoin/Dreamerv4-MC-GB10@dgx-spark-gb10/benchmarks/renders/move3-200f-steps16.mp4"></video>
+        <p>Capture/replay preview with 100-frame prefill + 100-frame record.</p>
+        <p><a href="https://cdn.jsdelivr.net/gh/blackfirebitcoin/Dreamerv4-MC-GB10@dgx-spark-gb10/benchmarks/renders/move3-200f-steps16.mp4">Open MP4 directly</a> · <a href="https://github.com/blackfirebitcoin/Dreamerv4-MC-GB10/blob/dgx-spark-gb10/benchmarks/renders/move3-200f-steps16.mp4">View file in repo</a></p>
+      </article>
+      <article class="clip" id="move3-200f-steps32.mp4">
+        <h2>Move 3 replay, steps_size=32</h2>
+        <p class="filename">move3-200f-steps32.mp4</p>
+        <video controls muted playsinline preload="metadata" width="640" src="https://cdn.jsdelivr.net/gh/blackfirebitcoin/Dreamerv4-MC-GB10@dgx-spark-gb10/benchmarks/renders/move3-200f-steps32.mp4"></video>
+        <p>Same limited capture/replay preview at steps_size=32.</p>
+        <p><a href="https://cdn.jsdelivr.net/gh/blackfirebitcoin/Dreamerv4-MC-GB10@dgx-spark-gb10/benchmarks/renders/move3-200f-steps32.mp4">Open MP4 directly</a> · <a href="https://github.com/blackfirebitcoin/Dreamerv4-MC-GB10/blob/dgx-spark-gb10/benchmarks/renders/move3-200f-steps32.mp4">View file in repo</a></p>
+      </article>
+      <article class="clip" id="portal-steps4-explore.mp4">
+        <h2>Portal scene exploration</h2>
+        <p class="filename">portal-steps4-explore.mp4</p>
+        <video controls muted playsinline preload="metadata" width="640" src="https://cdn.jsdelivr.net/gh/blackfirebitcoin/Dreamerv4-MC-GB10@dgx-spark-gb10/benchmarks/renders/portal-steps4-explore.mp4"></video>
+        <p>Offline render against a portal start frame at recommended steps_size=4.</p>
+        <p><a href="https://cdn.jsdelivr.net/gh/blackfirebitcoin/Dreamerv4-MC-GB10@dgx-spark-gb10/benchmarks/renders/portal-steps4-explore.mp4">Open MP4 directly</a> · <a href="https://github.com/blackfirebitcoin/Dreamerv4-MC-GB10/blob/dgx-spark-gb10/benchmarks/renders/portal-steps4-explore.mp4">View file in repo</a></p>
+      </article>
+      <article class="clip" id="boat-steps4-explore.mp4">
+        <h2>Boat / water scene exploration</h2>
+        <p class="filename">boat-steps4-explore.mp4</p>
+        <video controls muted playsinline preload="metadata" width="640" src="https://cdn.jsdelivr.net/gh/blackfirebitcoin/Dreamerv4-MC-GB10@dgx-spark-gb10/benchmarks/renders/boat-steps4-explore.mp4"></video>
+        <p>Offline render against a boat/water start frame at recommended steps_size=4.</p>
+        <p><a href="https://cdn.jsdelivr.net/gh/blackfirebitcoin/Dreamerv4-MC-GB10@dgx-spark-gb10/benchmarks/renders/boat-steps4-explore.mp4">Open MP4 directly</a> · <a href="https://github.com/blackfirebitcoin/Dreamerv4-MC-GB10/blob/dgx-spark-gb10/benchmarks/renders/boat-steps4-explore.mp4">View file in repo</a></p>
+      </article>
+  </main>
+</body>
+</html>
