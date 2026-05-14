@@ -41,3 +41,6 @@ __pycache__/
 tools/*.bak
 
 .captures/
+
+# Local lab notebook (must stay private; never commit)
+.session-notes.md
